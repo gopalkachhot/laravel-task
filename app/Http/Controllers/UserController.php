@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-
+use Validator;
 
 class UserController extends Controller
 {
@@ -34,11 +34,11 @@ class UserController extends Controller
 
 
      }
- 
- 
+
     public function index()
     {
-        //
+        $user = User::paginate(25);
+        return response($user,202);
     }
 
     /**
@@ -59,7 +59,27 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $ruls = [
+            'name'=>'required',
+            'email'=>'required',
+            'password'=>'required'
+        ];
+        $validator = Validator::make($request->all(),$ruls);
+        if ($validator->fails()) {
+            return response($validator->errors());
+        }
+        else {
+            $user = new User;
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->password = Hash::make($request->name); 
+
+            $result = $user->save();
+            if ($result) {
+                return response($user,202);
+            }
+
+        }
     }
 
     /**
@@ -70,7 +90,8 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        //
+        $user = User::findOrFail($id);
+        return response($user,202);
     }
 
     /**
@@ -93,7 +114,14 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->name);
+
+        $result = $user->update();
+        return response($user,202);
     }
 
     /**
@@ -104,6 +132,15 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $user = User::findOrFail($id);
+        $result= $user->delete();
+        return response($user,202);
+    }
+    public function serch($name)
+    {
+        $user = User::where('name','like','%'.$name.'%')->get();
+
+        return response($user);
+
     }
 }
